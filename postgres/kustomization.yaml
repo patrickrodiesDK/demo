@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: database
+
+resources:
+- namespace.yaml
+- postgres-secrets.yaml
+- postgres-configmap.yaml
+- postgres-logs-pvc.yaml
+- postgres-pvc.yaml
+- postgres-deployment.yaml
+- postgres-service.yaml
+- pgadmin-secrets.yaml
+- pgadmin-configmap.yaml
+- pgadmin-deployment.yaml
+- pgadmin-service.yaml
+
+# Use commonAnnotations instead of commonLabels to avoid selector conflicts
+commonAnnotations:
+  app.kubernetes.io/instance: demo
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/name: postgres-stack
+
+# Only add labels that won't conflict with selectors
+commonLabels:
+  stack: postgres
+  environment: demo

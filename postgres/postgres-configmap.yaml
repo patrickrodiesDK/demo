@@ -1,0 +1,49 @@
+# postgres/postgres-configmap.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-configmap
+  namespace: database
+  labels:
+    app: postgres
+    component: config
+data:
+  postgresql.conf: |
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 100
+    shared_buffers = 256MB
+    effective_cache_size = 1GB
+    work_mem = 4MB
+    maintenance_work_mem = 64MB
+    
+    # Logging configuration
+    logging_collector = on
+    log_destination = 'stderr,csvlog'
+    log_directory = '/var/lib/postgresql/logs'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_file_mode = 0644
+    log_rotation_age = 1d
+    log_rotation_size = 100MB
+    log_min_messages = info
+    log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    log_checkpoints = on
+    log_connections = on
+    log_disconnections = on
+    
+    # SQL QUERY LOGGING - Add these lines
+    log_statement = 'all'                    # Log all SQL statements (DDL, DML, SELECT)
+    log_min_duration_statement = 0          # Log all queries (0ms = log everything)
+    log_duration = on                       # Log query execution time
+    log_hostname = on                       # Include hostname in logs
+    log_lock_waits = on                     # Log when queries wait for locks
+    log_temp_files = 0                      # Log temporary files usage
+    
+    # Enhanced line prefix for better query tracking
+    log_line_prefix = '%t [%p] %q%u@%d/%a [%h] '
+    
+    # Optional: Log slow queries only (instead of all queries)
+    # log_statement = 'none'               # Uncomment these 3 lines to log only slow queries
+    # log_min_duration_statement = 1000   # Log queries taking longer than 1 second
+    # log_duration = off                   # Don't log duration for fast queries

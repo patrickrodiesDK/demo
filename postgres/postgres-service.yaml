@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: database
+  labels:
+    app: postgres
+    component: service
+spec:
+  type: ClusterIP  # Regular ClusterIP, not headless
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+  selector:
+    app: postgres
+    component: deployment  # Make sure this matches your deployment labels

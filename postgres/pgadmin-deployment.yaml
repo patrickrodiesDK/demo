@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin-deployment
+  namespace: database
+  labels:
+    app: pgadmin
+    component: deployment
+    app.kubernetes.io/name: postgres-stack
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin
+      component: deployment
+      # Don't include kustomize labels in selector
+  template:
+    metadata:
+      labels:
+        app: pgadmin
+        component: deployment
+        # Kustomize will add its labels here automatically
+    spec:
+      containers:
+      - name: pgadmin
+        image: dpage/pgadmin4:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 80
+        envFrom:
+        - secretRef:
+            name: pgadmin-secrets
+        - configMapRef:
+            name: pgadmin-configmap
+        volumeMounts:
+        - name: pgadmin-data
+          mountPath: /var/lib/pgadmin
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "512Mi"
+          requests:
+            cpu: "0.25"
+            memory: "256Mi"
+      volumes:
+      - name: pgadmin-data
+        emptyDir: {}

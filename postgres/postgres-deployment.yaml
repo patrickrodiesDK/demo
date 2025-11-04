@@ -1,0 +1,76 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  namespace: database
+  labels:
+    app: postgres
+    component: deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+      component: deployment
+  template:
+    metadata:
+      labels:
+        app: postgres
+        component: deployment
+    spec:
+      # Add security context at pod level
+      securityContext:
+        runAsUser: 999      # PostgreSQL user ID
+        runAsGroup: 999     # PostgreSQL group ID
+        fsGroup: 999        # File system group for volumes
+      containers:
+      - name: postgres
+        image: postgres:15
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: postgres
+          containerPort: 5432
+        envFrom:
+        - secretRef:
+            name: postgres-secrets
+        env:
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        - name: postgres-logs
+          mountPath: /var/lib/postgresql/logs
+        command:
+        - postgres
+        - -c
+        - config_file=/etc/postgresql/postgresql.conf
+        # Add container-level security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          limits:
+            cpu: "1.0"
+            memory: "2Gi"
+          requests:
+            cpu: "0.5"
+            memory: "1Gi"
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: postgres-config
+        configMap:
+          name: postgres-configmap
+      - name: postgres-logs
+        persistentVolumeClaim:
+          claimName: postgres-logs-pvc
